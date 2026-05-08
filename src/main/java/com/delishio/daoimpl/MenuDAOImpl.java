@@ -94,7 +94,70 @@ public class MenuDAOImpl implements MenuDAO {
         
         return menuItems;
     }
-    
+    public List<MenuItem> getFoodByMood(String mood) {
+
+        List<MenuItem> list = new ArrayList<>();
+
+        try {
+            Connection con = MyConnection.getConnection();
+
+            PreparedStatement ps = con.prepareStatement(
+                "SELECT * FROM menu_items WHERE LOWER(mood_tag) LIKE ?"
+            );
+
+            ps.setString(1, "%" + mood.toLowerCase() + "%");
+
+            ResultSet rs = ps.executeQuery();
+
+            while(rs.next()) {
+                MenuItem m = new MenuItem();
+
+                m.setMenuId(rs.getInt("menu_id"));
+                m.setItemName(rs.getString("item_name"));
+                m.setPrice(rs.getDouble("price"));
+                m.setImageUrl(rs.getString("image_url"));
+                m.setRestaurantId(rs.getInt("restaurant_id")); // ✅ IMPORTANT
+
+                list.add(m);
+            }
+
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+    public List<MenuItem> getSnacks() {
+
+        List<MenuItem> list = new ArrayList<>();
+
+        try {
+            Connection con = MyConnection.getConnection();
+
+            PreparedStatement ps = con.prepareStatement(
+                "SELECT * FROM menu_items WHERE LOWER(category) = 'snacks' LIMIT 3"
+            );
+
+            ResultSet rs = ps.executeQuery();
+
+            while(rs.next()) {
+                MenuItem m = new MenuItem();
+
+                m.setMenuId(rs.getInt("menu_id"));
+                m.setItemName(rs.getString("item_name"));
+                m.setPrice(rs.getDouble("price"));
+                m.setImageUrl(rs.getString("image_url"));
+                m.setRestaurantId(rs.getInt("restaurant_id"));
+
+                list.add(m);
+            }
+
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
     @Override
     public List<MenuItem> getAllMenuItems() {
         List<MenuItem> menuItems = new ArrayList<>();
@@ -175,6 +238,64 @@ public class MenuDAOImpl implements MenuDAO {
         
         return menuItems;
     }
+    public List<Integer> getMenuIdsByNames(List<String> names) {
+
+        List<Integer> menuIds = new ArrayList<>();
+
+        try {
+            Connection con = MyConnection.getConnection();
+
+            for(String name : names) {
+
+                PreparedStatement ps = con.prepareStatement(
+                    "SELECT menu_id FROM menu_items WHERE LOWER(item_name) LIKE ? AND is_available = 1"
+                );
+
+                ps.setString(1, "%" + name + "%");
+
+                ResultSet rs = ps.executeQuery();
+
+                if(rs.next()) {
+                    menuIds.add(rs.getInt("menu_id"));
+                }
+            }
+
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+
+        return menuIds;
+    }
+    public Integer getMenuIdByItemAndRestaurant(String item, String restaurant) {
+
+        Integer menuId = null;
+
+        try {
+            Connection con = MyConnection.getConnection();
+
+            String query = "SELECT m.menu_id FROM menu_items m " +
+                    "JOIN restaurants r ON m.restaurant_id = r.restaurant_id " +
+                    "WHERE LOWER(m.item_name) LIKE ? " +
+                    "AND LOWER(r.name) LIKE ?";
+
+            PreparedStatement ps = con.prepareStatement(query);
+
+            ps.setString(1, "%" + item + "%");
+            ps.setString(2, "%" + restaurant + "%");
+
+            ResultSet rs = ps.executeQuery();
+
+            if(rs.next()) {
+                menuId = rs.getInt("menu_id");
+            }
+
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+
+        return menuId;
+    }
+    
     
     private MenuItem extractMenuItemFromResultSet(ResultSet rs) throws SQLException {
         MenuItem menuItem = new MenuItem();

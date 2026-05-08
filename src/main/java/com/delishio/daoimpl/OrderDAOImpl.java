@@ -3,219 +3,196 @@ package com.delishio.daoimpl;
 import com.delishio.dao.OrderDAO;
 import com.delishio.models.Order;
 import com.delishio.models.OrderItem;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class OrderDAOImpl implements OrderDAO {
-    private Connection connection;
 
-    public OrderDAOImpl(Connection connection) {
-        this.connection = connection;
+    private Connection con;
+
+    public OrderDAOImpl(Connection con) {
+        this.con = con;
     }
 
+    // 1️⃣ INSERT ORDER (returns generated order_id)
     @Override
     public int insertOrder(Order order) throws SQLException {
-        String sql = "INSERT INTO orders (order_number, customer_address, customer_phone, " +
-                     "delivery_instructions, payment_method, card_number, upi_id, " +
-                     "order_status, total_amount, user_id, restaurant_id) " +   // ✅ added
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (PreparedStatement pstmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            pstmt.setString(1, order.getOrderNumber());
-            pstmt.setString(2, order.getCustomerAddress());
-            pstmt.setString(3, order.getCustomerPhone());
-            pstmt.setString(4, order.getDeliveryInstructions());
-            pstmt.setString(5, order.getPaymentMethod());
-            pstmt.setString(6, order.getCardNumber());
-            pstmt.setString(7, order.getUpiId());
-            pstmt.setString(8, order.getOrderStatus());
-            pstmt.setDouble(9, order.getTotalAmount());
-            pstmt.setInt(10, order.getUserId());        // ✅ added
-            pstmt.setInt(11, order.getRestaurantId());  // ✅ added
+        String sql = "INSERT INTO orders " +
+                "(user_id, customer_address, customer_phone, delivery_instructions, payment_method, total_amount, order_status) " +
+                "VALUES (?, ?, ?, ?, ?, ?, 'PLACED')";
 
-            int affectedRows = pstmt.executeUpdate();
+        PreparedStatement ps =
+                con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
-            if (affectedRows == 0) {
-                throw new SQLException("Creating order failed, no rows affected.");
-            }
+        ps.setInt(1, order.getUserId());
+        ps.setString(2, order.getCustomerAddress());
+        ps.setString(3, order.getCustomerPhone());
+        ps.setString(4, order.getDeliveryInstructions());
+        ps.setString(5, order.getPaymentMethod());
+        ps.setDouble(6, order.getTotalAmount());
 
-            try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    return generatedKeys.getInt(1);
-                } else {
-                    throw new SQLException("Creating order failed, no ID obtained.");
-                }
-            }
+        ps.executeUpdate();
+
+        ResultSet rs = ps.getGeneratedKeys();
+        if (rs.next()) {
+            return rs.getInt(1); // order_id
         }
+        return 0;
     }
 
+    // 2️⃣ INSERT ORDER ITEMS
     @Override
-    public void insertOrderItems(int orderId, List<OrderItem> items) throws SQLException {
-        String sql = "INSERT INTO order_items (order_id, food_name, quantity, price) VALUES (?, ?, ?, ?)";
+    public void insertOrderItems(int orderId, List<OrderItem> items)
+            throws SQLException {
 
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            for (OrderItem item : items) {
-                pstmt.setInt(1, orderId);
-                pstmt.setString(2, item.getFoodName());
-                pstmt.setInt(3, item.getQuantity());
-                pstmt.setDouble(4, item.getPrice());
-                pstmt.addBatch();
-            }
-            pstmt.executeBatch();
+        String sql = "INSERT INTO order_items " +
+                "(order_id, food_id, food_name, quantity, price) VALUES (?, ?, ?, ?, ?)";
+
+        PreparedStatement ps = con.prepareStatement(sql);
+
+        for (OrderItem item : items) {
+            ps.setInt(1, orderId);
+            ps.setString(2, item.getFoodName());
+            ps.setString(3, item.getFoodName());
+            ps.setInt(4, item.getQuantity());
+            ps.setDouble(5, item.getPrice());
+            ps.addBatch();
         }
+
+        ps.executeBatch();
     }
 
+    // 3️⃣ SAVE ORDER (MAIN METHOD USED BY SERVLET)
     @Override
     public boolean saveOrder(Order order, List<OrderItem> items) {
+
         try {
-            connection.setAutoCommit(false);
+            con.setAutoCommit(false);
 
             int orderId = insertOrder(order);
-
-            if (items != null && !items.isEmpty()) {
-                insertOrderItems(orderId, items);
+            if (orderId == 0) {
+                con.rollback();
+                return false;
             }
 
-            connection.commit();
+            insertOrderItems(orderId, items);
+
+            con.commit();
             return true;
 
-        } catch (SQLException e) {
-            try {
-                connection.rollback();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
+        } catch (Exception e) {
+            try { con.rollback(); } catch (Exception ignored) {}
             e.printStackTrace();
             return false;
-        } finally {
-            try {
-                connection.setAutoCommit(true);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
     }
 
+    // 4️⃣ GET ORDER BY ORDER NUMBER
     @Override
     public Order getOrderByNumber(String orderNumber) throws SQLException {
-        String sql = "SELECT * FROM orders WHERE order_number = ?";
 
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setString(1, orderNumber);
-            ResultSet rs = pstmt.executeQuery();
+        String sql = "SELECT * FROM orders WHERE order_number=?";
+        PreparedStatement ps = con.prepareStatement(sql);
+        ps.setString(1, orderNumber);
 
-            if (rs.next()) {
-                Order order = new Order();
-                order.setOrderId(rs.getInt("order_id"));
-                order.setOrderNumber(rs.getString("order_number"));
-                order.setCustomerAddress(rs.getString("customer_address"));
-                order.setCustomerPhone(rs.getString("customer_phone"));
-                order.setDeliveryInstructions(rs.getString("delivery_instructions"));
-                order.setPaymentMethod(rs.getString("payment_method"));
-                order.setCardNumber(rs.getString("card_number"));
-                order.setUpiId(rs.getString("upi_id"));
-                order.setOrderStatus(rs.getString("order_status"));
-                order.setOrderDate(rs.getTimestamp("order_date"));
-                order.setTotalAmount(rs.getDouble("total_amount"));
-                order.setUserId(rs.getInt("user_id"));           // ✅ added
-                order.setRestaurantId(rs.getInt("restaurant_id")); // ✅ added
-
-                order.setOrderItems(getOrderItems(order.getOrderId()));
-
-                return order;
-            }
+        ResultSet rs = ps.executeQuery();
+        if (rs.next()) {
+            Order o = new Order();
+            o.setOrderId(rs.getInt("order_id"));
+            o.setTotalAmount(rs.getDouble("total_amount"));
+            o.setOrderStatus(rs.getString("order_status"));
+            o.setOrderDate(rs.getTimestamp("order_date"));
+            return o;
         }
         return null;
     }
 
+    // 5️⃣ GET ORDER ITEMS
     @Override
     public List<OrderItem> getOrderItems(int orderId) throws SQLException {
-        String sql = "SELECT * FROM order_items WHERE order_id = ?";
-        List<OrderItem> items = new ArrayList<>();
 
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setInt(1, orderId);
-            ResultSet rs = pstmt.executeQuery();
+        List<OrderItem> list = new ArrayList<>();
 
-            while (rs.next()) {
-                OrderItem item = new OrderItem();
-                item.setItemId(rs.getInt("item_id"));
-                item.setOrderId(rs.getInt("order_id"));
-                item.setFoodName(rs.getString("food_name"));
-                item.setQuantity(rs.getInt("quantity"));
-                item.setPrice(rs.getDouble("price"));
-                items.add(item);
-            }
+        String sql = "SELECT * FROM order_items WHERE order_id=?";
+        PreparedStatement ps = con.prepareStatement(sql);
+        ps.setInt(1, orderId);
+
+        ResultSet rs = ps.executeQuery();
+        while (rs.next()) {
+            OrderItem item = new OrderItem();
+            item.setFoodName(rs.getString("food_name"));
+            item.setQuantity(rs.getInt("quantity"));
+            item.setPrice(rs.getDouble("price"));
+            list.add(item);
         }
-        return items;
+        return list;
     }
 
+    // 6️⃣ ADMIN: GET ALL ORDERS
     @Override
     public List<Order> getAllOrders() throws SQLException {
-        String sql = "SELECT * FROM orders ORDER BY order_date DESC";
+
         List<Order> orders = new ArrayList<>();
+        String sql = "SELECT * FROM orders ORDER BY order_date DESC";
 
-        try (Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+        Statement st = con.createStatement();
+        ResultSet rs = st.executeQuery(sql);
 
-            while (rs.next()) {
-                Order order = new Order();
-                order.setOrderId(rs.getInt("order_id"));
-                order.setOrderNumber(rs.getString("order_number"));
-                order.setCustomerAddress(rs.getString("customer_address"));
-                order.setCustomerPhone(rs.getString("customer_phone"));
-                order.setDeliveryInstructions(rs.getString("delivery_instructions"));
-                order.setPaymentMethod(rs.getString("payment_method"));
-                order.setOrderStatus(rs.getString("order_status"));
-                order.setOrderDate(rs.getTimestamp("order_date"));
-                order.setTotalAmount(rs.getDouble("total_amount"));
-                order.setUserId(rs.getInt("user_id"));           // ✅ added
-                order.setRestaurantId(rs.getInt("restaurant_id")); // ✅ added
-                orders.add(order);
-            }
+        while (rs.next()) {
+            Order o = new Order();
+            o.setOrderId(rs.getInt("order_id"));
+            o.setTotalAmount(rs.getDouble("total_amount"));
+            o.setOrderStatus(rs.getString("order_status"));
+            o.setOrderDate(rs.getTimestamp("order_date"));
+            orders.add(o);
         }
         return orders;
     }
 
+    // 7️⃣ UPDATE ORDER STATUS
     @Override
     public boolean updateOrderStatus(String orderNumber, String status) {
-        String sql = "UPDATE orders SET order_status = ? WHERE order_number = ?";
 
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setString(1, status);
-            pstmt.setString(2, orderNumber);
-            return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) {
+        try {
+            String sql = "UPDATE orders SET order_status=? WHERE order_number=?";
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setString(1, status);
+            ps.setString(2, orderNumber);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
     }
 
+    // 8️⃣ CANCEL ORDER
     @Override
     public boolean cancelOrder(String orderNumber) {
-        return updateOrderStatus(orderNumber, "Cancelled");
+        return updateOrderStatus(orderNumber, "CANCELLED");
     }
-public List<Order> getOrdersByUserId(int userId) throws SQLException {
-    String sql = "SELECT * FROM orders WHERE user_id = ? ORDER BY order_date DESC";
-    List<Order> orders = new ArrayList<>();
 
-    try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-       pstmt.setInt(1, userId);
-        ResultSet rs = pstmt.executeQuery();
+    // 9️⃣ USER → MY ORDERS
+    @Override
+    public List<Order> getOrdersByUserId(int userId) throws SQLException {
+
+        List<Order> orders = new ArrayList<>();
+        String sql = "SELECT * FROM orders WHERE user_id=? ORDER BY order_date DESC";
+
+        PreparedStatement ps = con.prepareStatement(sql);
+        ps.setInt(1, userId);
+        ResultSet rs = ps.executeQuery();
 
         while (rs.next()) {
-            Order order = new Order();
-            order.setOrderId(rs.getInt("order_id"));
-            order.setOrderNumber(rs.getString("order_number"));
-            order.setOrderStatus(rs.getString("order_status"));
-            order.setOrderDate(rs.getTimestamp("order_date"));
-            order.setTotalAmount(rs.getDouble("total_amount"));
-            order.setRestaurantId(rs.getInt("restaurant_id"));
-            orders.add(order);
+            Order o = new Order();
+            o.setOrderId(rs.getInt("order_id"));
+            o.setTotalAmount(rs.getDouble("total_amount"));
+            o.setOrderStatus(rs.getString("order_status"));
+            o.setOrderDate(rs.getTimestamp("order_date"));
+            orders.add(o);
         }
+        return orders;
     }
-    return orders;
-}
-
 }

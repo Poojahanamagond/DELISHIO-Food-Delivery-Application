@@ -223,6 +223,24 @@ public class CartDAOImpl implements CartDAO {
 
         return cartList;
     }
+    public void addToCart(int userId, int menuId) {
+
+        try {
+            Connection con = MyConnection.getConnection();
+
+            PreparedStatement ps = con.prepareStatement(
+                "INSERT INTO cart (user_id, menu_id, quantity) VALUES (?, ?, 1)"
+            );
+
+            ps.setInt(1, userId);
+            ps.setInt(2, menuId);
+
+            ps.executeUpdate();
+
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     @Override
     public void clearCartByUserAndRestaurant(Integer userId, int restaurantId) {

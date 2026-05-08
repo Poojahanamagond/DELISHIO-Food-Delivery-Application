@@ -12,6 +12,7 @@ public class User {
     private String role;
     private Timestamp createdAt;
     private Timestamp updatedAt;
+    private int restaurantId;
 
     public User() {}
 
@@ -26,7 +27,13 @@ public class User {
         this.role = role;
     }
 
-    // Getters and Setters
+    public int getRestaurantId() {
+        return restaurantId;
+    }
+
+    public void setRestaurantId(int restaurantId) {
+        this.restaurantId = restaurantId;
+    }// Getters and Setters
     public int getUserId() { return userId; }
     public void setUserId(int userId) { this.userId = userId; }
     
@@ -58,8 +65,9 @@ public class User {
 	public String toString() {
 		return "User [userId=" + userId + ", username=" + username + ", email=" + email + ", password=" + password
 				+ ", phone=" + phone + ", address=" + address + ", role=" + role + ", createdAt=" + createdAt
-				+ ", updatedAt=" + updatedAt + "]";
+				+ ", updatedAt=" + updatedAt + ", restaurantId=" + restaurantId + "]";
 	}
-    
+
+	
     
 }

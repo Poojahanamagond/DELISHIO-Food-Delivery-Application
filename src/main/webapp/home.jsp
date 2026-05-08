@@ -24,18 +24,13 @@
 <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 
 <style>
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-}
+*{margin:0;padding:0;box-sizing:border-box;}
 
 body{
     font-family:'Segoe UI',system-ui;
     min-height:100vh;
-    /* Wine/Burgundy Gradient */
     background: white; 
-    color: #ffffff; /* Changed default text to white for readability */
+    color: #ffffff;
     overflow-x: hidden;
 }
 
@@ -46,7 +41,6 @@ body{
     padding:0 30px 60px;
 }
 
-/* HEADER ANIMATION */
 .page-header{
     text-align:center;
     margin:40px 0;
@@ -65,7 +59,6 @@ body{
     -webkit-text-fill-color: transparent;
 }
 
-/* SEARCH GLASSMORPISM */
 .search-section{
     display:flex;
     justify-content:center;
@@ -88,14 +81,8 @@ body{
     color:white;
     font-weight:700;
     cursor:pointer;
-    transition: 0.3s;
-}
-.search-section .btn:hover{
-    letter-spacing: 1px;
-    box-shadow: 0 5px 15px rgba(118, 184, 90, 0.4);
 }
 
-/* ADVANCED BANNER WITH KEN BURNS EFFECT */
 .banner-container{
     width:100%;
     height:620px;
@@ -103,7 +90,6 @@ body{
     overflow:hidden;
     border-radius:30px;
     margin-bottom:50px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
 }
 
 .banner{
@@ -112,113 +98,46 @@ body{
     background-size:cover;
     background-position:center;
     opacity:0;
-    transform: scale(1.1); /* Start slightly zoomed for Ken Burns */
+    transform: scale(1.1);
     transition: opacity 1.5s ease-in-out, transform 6s linear;
 }
-
 .banner.active{
     opacity:1;
-    transform: scale(1); /* Zoom out effect while active */
+    transform: scale(1);
 }
 
-/* BANNER OVERLAY GRADIENT */
-.banner-container::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to top, rgba(0,0,0,0.4), transparent);
-    pointer-events: none;
-}
-
-/* RESTAURANTS GRID */
 .restaurants-grid{
     display:grid;
     grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
     gap:30px;
-    width:100%;
 }
 
-/* MODERN CARD DESIGN */
 .restaurant-card{
     background:white;
     border-radius:25px;
     overflow:hidden;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-    position: relative;
-    border: 1px solid #f0f0f0;
-}
-
-.restaurant-card:hover{
-    transform: translateY(-15px) scale(1.02);
-    box-shadow: 0 30px 60px rgba(0,0,0,0.12);
-    border-color: #76b85a;
-}
-
-.restaurant-image{
-    position: relative;
-    overflow: hidden;
 }
 
 .restaurant-image img{
     width:100%;
     height:240px;
     object-fit:cover;
-    transition: transform 0.6s ease;
-}
-
-.restaurant-card:hover .restaurant-image img{
-    transform: scale(1.15);
-}
-
-/* "OPEN" TAG SPECIAL */
-.restaurant-card::before {
-    content: 'TOP RATED';
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: #ffcc00;
-    color: #000;
-    padding: 5px 12px;
-    border-radius: 50px;
-    font-size: 10px;
-    font-weight: 800;
-    z-index: 5;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
 .restaurant-info{
-    padding: 25px;
+    padding:25px;
 }
 .restaurant-info h3{
-    font-size:22px;
-    font-weight:800;
-    margin-bottom:10px;
-    color: #1a1a1a;
+    color:black;
 }
 
 .restaurant-meta{
     display:flex;
-    gap: 15px;
-    font-size:14px;
-    margin: 15px 0;
+    gap:15px;
 }
 
-.rating-pill {
-    background: #fff9e6;
-    color: #f1c40f;
-    padding: 4px 10px;
-    border-radius: 8px;
-    font-weight: 700;
-}
-
-.time-pill {
-    background: #f0f7ff;
-    color: #3498db;
-    padding: 4px 10px;
-    border-radius: 8px;
-    font-weight: 700;
-}
+.rating-pill { background:#fff9e6; padding:4px 10px; }
+.time-pill { background:#f0f7ff; padding:4px 10px; }
 
 .restaurant-info .btn{
     display:block;
@@ -226,23 +145,9 @@ body{
     padding:14px;
     text-align:center;
     border-radius:15px;
-    background: #000; /* Sleek black button */
+    background:black;
     color:white;
-    font-weight:700;
     text-decoration:none;
-    transition: 0.3s;
-}
-
-.restaurant-card:hover .btn {
-    background: green;
-    transform: scale(1.05);
-}
-
-/* RESPONSIVE BANNER HEIGHT */
-@media (max-width:1024px){ .banner-container{height:400px;} }
-@media (max-width:768px){ 
-    .banner-container{height:300px;} 
-    .search-input { width: 200px; }
 }
 </style>
 </head>
@@ -258,7 +163,7 @@ body{
         <p>Your favorite meals are just one click away.</p>
     </div>
 
-    <div class="search-section" data-aos="fade-up">
+    <div class="search-section">
         <form action="restaurants" method="get" style="display: flex;">
             <input type="hidden" name="action" value="search">
             <input type="text" name="keyword" class="search-input"
@@ -267,28 +172,36 @@ body{
         </form>
     </div>
 
-    <div class="banner-container" data-aos="zoom-in">
+    <button type="button" onclick="startVoice()" style="
+    margin-left:10px;
+    padding:12px 18px;
+    border-radius:50%;
+    border:none;
+    background:black;
+    color:white;
+    cursor:pointer;
+">
+🎤
+</button>
+
+    <div class="banner-container">
         <div class="banner active" style="background-image:url('images/banner.png')"></div>
         <div class="banner" style="background-image:url('images/banner02.png')"></div>
     </div>
 
     <div class="restaurants-grid">
-    <% if(restaurants!=null && !restaurants.isEmpty()){
-        int delay = 0;
-        for(Restaurant restaurant:restaurants){ %>
+    <% for(Restaurant restaurant:restaurants){ %>
 
-        <div class="restaurant-card" data-aos="fade-up" data-aos-delay="<%= delay %>">
+        <div class="restaurant-card">
             <div class="restaurant-image">
-                <img src="<%= request.getContextPath() %>/images/<%= restaurant.getImageUrl() %>" loading="lazy">
+                <img src="<%= request.getContextPath() %>/images/<%= restaurant.getImageUrl() %>">
             </div>
             <div class="restaurant-info">
                 <h3><%= restaurant.getName() %></h3>
-                <p style="color: #888;">🍴 <%= restaurant.getCuisineType() %></p>
                 <div class="restaurant-meta">
                     <span class="rating-pill">⭐ <%= restaurant.getRating() %></span>
                     <span class="time-pill">🕒 <%= restaurant.getDeliveryTime() %></span>
                 </div>
-                <p style="font-size: 13px; color:black;">📍 <%= restaurant.getAddress() %></p>
                 <a class="btn"
                    href="<%= request.getContextPath() %>/menu?restaurantId=<%= restaurant.getRestaurantId() %>">
                    Explore Menu
@@ -296,37 +209,51 @@ body{
             </div>
         </div>
 
-    <% delay += 100; } } else { %>
-        <p>No restaurants available.</p>
     <% } %>
     </div>
 
 </div>
 
 
-
-<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script>
-// Initialize Scroll Animations
-AOS.init({
-    duration: 1000,
-    once: true
-});
+function startVoice() {
 
-// Advanced Banner Logic with Ken Burns Reset
-let banners=document.querySelectorAll(".banner");
-let index=0;
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
 
-setInterval(()=>{
-    // Remove active class
-    banners[index].classList.remove("active");
-    
-    // Increment index
-    index=(index+1)%banners.length;
-    
-    // Add active class (Triggers CSS transitions)
-    banners[index].classList.add("active");
-}, 5000); // 5 seconds gives more time for the Ken Burns zoom to show
+    recognition.onresult = function(event) {
+
+        let text = event.results[0][0].transcript.toLowerCase();
+
+        alert("You said: " + text);
+
+        // 🎯 ONLY MOOD LOGIC
+        if(text.includes("happy") || text.includes("sad") || text.includes("tired")) {
+
+            fetch("<%= request.getContextPath() %>/mood", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: "mood=" + encodeURIComponent(text)
+            })
+            .then(res => res.text())
+            .then(data => {
+                document.open();
+                document.write(data);
+                document.close();
+            });
+
+        } else {
+            alert("Try saying: I feel happy / sad / tired");
+        }
+    };
+
+    recognition.onerror = function() {
+        alert("Voice not supported. Use Chrome.");
+    };
+
+    recognition.start();
+}
 </script>
 
 </body>

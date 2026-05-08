@@ -15,4 +15,5 @@ public interface OrderDAO {
     boolean updateOrderStatus(String orderNumber, String status);
     boolean cancelOrder(String orderNumber);
 	List<Order> getOrdersByUserId(int userId) throws SQLException;
+	
 }

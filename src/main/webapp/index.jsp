@@ -278,7 +278,17 @@ body{
                 <div class="hero-buttons">
                     <a href="register.jsp" class="btn btn-primary">Get Started</a>
                     <a href="login.jsp" class="btn btn-secondary">Login</a>
+                    <a href="restaurantRegister.jsp" style="
+    padding:10px 15px;
+    background:orange;
+    color:white;
+    border-radius:10px;
+    text-decoration:none;
+">
+    Register Your Restaurant
+</a>
                 </div>
+                
             </div>
         </div>
 
@@ -317,7 +327,11 @@ body{
               <ul>
                   <li><a href="#">About Us</a></li>
                   <li><a href="#">Partner with us</a></li>
-                  <li><a href="#">Contact Support</a></li>
+                  <li>
+    📧 <a href="mailto:admindelishi@gmail.com">
+        admindelishi@gmail.com
+    </a>
+</li>
               </ul>
           </div>
           <div class="footer-column">

@@ -1,14 +1,14 @@
 package com.delishio.controllers;
 
 import java.io.IOException;
-import java.sql.SQLException;
+import java.sql.Connection;
 import java.util.List;
 
 import com.delishio.dao.OrderDAO;
 import com.delishio.daoimpl.OrderDAOImpl;
 import com.delishio.models.Order;
+import com.delishio.models.User;
 import com.delishio.util.MyConnection;
-import com.sun.jdi.connect.spi.Connection;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -24,7 +24,7 @@ public class UserOrdersServlet extends HttpServlet {
 
     @Override
     public void init() throws ServletException {
-        java.sql.Connection connection = MyConnection.getConnection();
+        Connection connection = MyConnection.getConnection();
         orderDAO = new OrderDAOImpl(connection);
     }
 
@@ -33,20 +33,29 @@ public class UserOrdersServlet extends HttpServlet {
             throws ServletException, IOException {
 
         HttpSession session = request.getSession(false);
+
+        // 🔒 Login check
         if (session == null || session.getAttribute("user") == null) {
             response.sendRedirect("login.jsp");
             return;
         }
 
-        int userId = (int) session.getAttribute("userId"); // Make sure this is set during login
-        List<Order> orders;
-		try {
-			orders = orderDAO.getOrdersByUserId(userId);
-			
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} // You’ll need to implement this method
+        // ✅ Get logged-in user
+        User user = (User) session.getAttribute("user");
+        int userId = user.getUserId();
 
+        try {
+            // ✅ Fetch user orders
+            List<Order> orders = orderDAO.getOrdersByUserId(userId);
+
+            // ✅ Send to JSP
+            request.setAttribute("orders", orders);
+            request.getRequestDispatcher("my-orders.jsp")
+                   .forward(request, response);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect("home.jsp");
+        }
     }
 }

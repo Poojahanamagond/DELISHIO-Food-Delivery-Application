@@ -11,4 +11,6 @@ public interface MenuDAO {
     boolean updateMenuItem(MenuItem menuItem);
     boolean deleteMenuItem(int menuId);
     List<MenuItem> getAvailableMenuItems(int restaurantId);
+	List<MenuItem> getSnacks();
+	List<MenuItem> getFoodByMood(String mood);
 }

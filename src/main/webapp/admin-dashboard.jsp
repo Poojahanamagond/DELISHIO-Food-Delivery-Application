@@ -24,6 +24,7 @@
     --shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
+
 body {
     background-color: var(--background-gray);
     color: var(--text-dark);
@@ -131,6 +132,11 @@ nav {
         <% } %>
         
         <div class="admin-grid">
+        <div class="admin-card">
+    <h2>📩 Restaurant Requests</h2>
+    <p>Approve or reject new restaurant registrations</p>
+    <a href="admin-requests" class="btn btn-primary">View Requests</a>
+</div>
             <div class="admin-card">
                 <h2>🏪 Restaurants</h2>
                 <p>Manage restaurant listings</p>
@@ -154,6 +160,9 @@ nav {
     <p>View customer information</p>
     <a href="view-users" class="btn btn-primary">View Customers</a>
 </div>
+
+   
+   
         </div>
     </div>
 </body>
